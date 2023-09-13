@@ -1,3 +1,8 @@
+use chrono::Utc;
+use log::{error, info, warn};
+use sha2::{Sha256, Digest};
+use serde::{Deserialize, Serialize};
+
 pub struct App {
     pub blocks: Vec<Block>,
 }
@@ -22,7 +27,7 @@ fn hash_to_binary_representation(hash: &[u8]) -> String {
     res
 }
 
-fn mine_block(id: u64, timestamp: u64, previous_hash: &str, data: &str) -> (u64, String) {
+fn mine_block(id: u64, timestamp: i64, previous_hash: &str, data: &str) -> (u64, String) {
     info!("mining block ...");
     let mut nonce = 0;
 
@@ -32,12 +37,32 @@ fn mine_block(id: u64, timestamp: u64, previous_hash: &str, data: &str) -> (u64,
         }
 
         let hash = calculate_hash(id, timestamp, previous_hash, data, nonce);
+        let binary_hash = hash_to_binary_representation(&hash);
+        if binary_hash.starts_with(DIFFICULTY_PREFIX) {
+            info!(
+                "mined! nonce: {}, hash: {}, binary hash: {}",
+                nonce,
+                hex::encode(&hash),
+                binary_hash
+            );
+            return (nonce, hex::encode(hash));
+        }
+        nonce += 1;
     }
 }
 
-
-
-
+fn calculate_hash(id: u64, timestamp: i64, previous_hash: &str, data: &str, nonce: u64) -> Vec<u8> {
+    let data = serde_json::json!({
+        "id": id,
+        "previous_hash": previous_hash,
+        "data": data,
+        "timestamp": timestamp,
+        "nonce": nonce
+    });
+    let mut hasher = Sha256::new();
+    hasher.update(data.to_string().as_bytes());
+    hasher.finalize().as_slice().to_owned()
+}
 
 
 
@@ -121,7 +146,7 @@ impl App {
             let first: &Block = chain.get(i - 1).expect("has to exist");
             let second: &Block = chain.get(i).expect("has to exist");
             if !self.is_block_valid(second, first) {
-                false
+                return false;
             }
         }
         true
