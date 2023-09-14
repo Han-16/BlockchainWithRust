@@ -36,8 +36,8 @@ fn mine_block(id: u64, timestamp: i64, previous_hash: &str, data: &str) -> (u64,
             info!("nonce: {}", nonce);
         }
 
-        let hash = calculate_hash(id, timestamp, previous_hash, data, nonce);
-        let binary_hash = hash_to_binary_representation(&hash);
+        let hash: Vec<u8> = calculate_hash(id, timestamp, previous_hash, data, nonce);
+        let binary_hash: String = hash_to_binary_representation(&hash);
         if binary_hash.starts_with(DIFFICULTY_PREFIX) {
             info!(
                 "mined! nonce: {}, hash: {}, binary hash: {}",
@@ -64,9 +64,6 @@ fn calculate_hash(id: u64, timestamp: i64, previous_hash: &str, data: &str, nonc
     hasher.finalize().as_slice().to_owned()
 }
 
-
-
-
 impl Block {
     pub fn new(id: u64, previous_hash: String, data: String) -> Self {
         let now = Utc::now();
@@ -81,8 +78,6 @@ impl Block {
         }
     }
 }
-
-
 
 impl App {
     fn new() -> Self {
@@ -154,8 +149,8 @@ impl App {
 
     // Always choose the longest valid chain
     fn choose_chain(&mut self, local: Vec<Block>, remote: Vec<Block>) -> Vec<Block> {
-        let is_local_valid = self.is_chain_valid(&local);
-        let is_remote_valid = self.is_chain_valid(&remote);
+        let is_local_valid: bool = self.is_chain_valid(&local);
+        let is_remote_valid: bool = self.is_chain_valid(&remote);
 
         if is_local_valid && is_remote_valid {
             if local.len() >= remote.len() {
@@ -174,7 +169,9 @@ impl App {
 }
 
 
+fn main() {
 
+}
 
 
 
